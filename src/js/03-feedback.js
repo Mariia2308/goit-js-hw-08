@@ -1,36 +1,49 @@
 import throttle from 'lodash.throttle';
 
-const STORAGE_KEY = 'feedback-form-state';
+const formElement = document.querySelector('.feedback-form');
+const inputElement = document.querySelector('form input');
+const textElement = document.querySelector('form textarea');
+let formDate = {};
+const STORAGE_KEY = 'feedback';
 
-const refs = {
-  formElement: document.querySelector('.feedback-form'),
-  emailInput: document.querySelector('.feedback-form input'),
-  messageTextarea: document.querySelector('.feedback-form textarea'),
-};
+formElement.addEventListener('submit', onFormSubmit);
+formElement.addEventListener('input', throttle(onFormInput, 500));
 
-refs.formElement.addEventListener('input', throttle(onFormInput, 500));
-refs.formElement.addEventListener('submit', onFormSubmit);
+populateForm();
 
-addForm();
+function onFormSubmit(event) {
+  event.preventDefault();
 
-function onFormInput() {
-  const currentData = {
-    email: refs.emailInput.value,
-    message: refs.messageTextarea.value,
-  };
-  console.log(currentData);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
-}
+  if (inputElement.value === '' || textElement.value === '') {
+    return alert('Fields must be filled in');
+  }
 
-function onFormSubmit(evt) {
-  evt.preventDefault();
-  evt.target.reset();
+  console.log(formDate);
+
   localStorage.removeItem(STORAGE_KEY);
+  event.currentTarget.reset();
+  formDate = {};
 }
 
-function addForm() {
-  const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+function onFormInput(event) {
+  const formValue = event.target.value;
+  const formKay = event.target.name;
 
-  refs.emailInput.value = savedData.email || '';
-  refs.messageTextarea.value = savedData.message || '';
+  formDate[formKay] = formValue;
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formDate));
+}
+
+function populateForm() {
+  const savedForm = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+  if (savedForm.email) {
+    inputElement.value = savedForm.email;
+    formDate.email = savedForm.email;
+  }
+
+  if (savedForm.message) {
+    textElement.value = savedForm.message;
+    formDate.message = savedForm.message;
+  }
 }
