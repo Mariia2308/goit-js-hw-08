@@ -1,52 +1,54 @@
-import '../css/common.css';
-import '../css/03-feedback.css';
-import throttle from 'lodash.throttle';
+import throttle from "lodash.throttle";
 
-const STORAGE_KEY = 'feedback-form-state';
-const refs = {
-  form: document.querySelector('.feedback-form'),
-  textarea: document.querySelector('.feedback-form textarea'),
-  input: document.querySelector('.feedback-form input[name="email"]'),
-};
+const inputEl = document.querySelector('input');
+const messageEl = document.querySelector('textarea');
+const form = document.querySelector(".feedback-form");
+const FORM_STATE = "feedback-form-state"
 
-
-refs.form.addEventListener('input', throttle(onTextareaInput, 500));
-
-
-populateTextarea();
-
-refs.form.addEventListener('submit', handleSubmit);
-
-function onTextareaInput(e) {
-  const formData = {
-    email: refs.input.value,
-    message: refs.textarea.value,
-  };
-
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+let formData = {
+    email: "",
+    message: ""
 }
 
-function populateTextarea() {
+updateForm();
 
-  const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+inputEl.addEventListener('input', throttle(() => {
+    formData.email = inputEl.value;
+    localStorage.setItem(FORM_STATE, JSON.stringify(formData));
+}, 500)
+);
 
-  if (savedData) {
+messageEl.addEventListener('input', throttle(() => {
+    formData.message = messageEl.value;  
+    localStorage.setItem(FORM_STATE, JSON.stringify(formData));
+}, 500)
+);
 
-    refs.input.value = savedData.email || '';
-    refs.textarea.value = savedData.message || '';
-  }
+form.addEventListener("submit", handleSubmit);
+
+function updateForm()  {
+    if (localStorage.getItem(FORM_STATE)) {
+        formData.email = JSON.parse(localStorage.getItem(FORM_STATE)).email;
+        formData.message = JSON.parse(localStorage.getItem(FORM_STATE)).message;
+        inputEl.value = formData.email;
+        messageEl.value = formData.message;
+    } else {
+        return;
+    }
 }
 
-function handleSubmit(e) {
-  e.preventDefault();
+function handleSubmit(event) {
+    event.preventDefault();
 
-
-  localStorage.removeItem(STORAGE_KEY);
-  refs.form.reset();
-
-  console.log({
-    email: refs.input.value,
-    message: refs.textarea.value,
-  });
+    if (inputEl.value && messageEl.value) {
+    console.log(formData);
+    localStorage.clear();
+    event.currentTarget.reset();
+    formData = {
+        email: "",
+        message: ""
+    }
+    } else {
+        alert("Please make sure all fields are filled!")
+    }
 }
